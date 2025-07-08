@@ -5,29 +5,34 @@ const urls = {
 };
 
 let currentTab = 'round1';
+let lastData = '';
 
 async function fetchLeaderboard(tab) {
   const res = await fetch(urls[tab]);
   const data = await res.text();
-  const rows = data.trim().split('\n').slice(1); // Skip header
 
-  const parsed = rows.map(row => {
-    const cols = row.split(',');
-    return { name: cols[0], kills: cols[1] };
-  });
+  // Only update if data has changed
+  if (data !== lastData) {
+    lastData = data;
 
-  // Sort by kills descending (in case Google Sheet doesn't)
-  parsed.sort((a, b) => b.kills - a.kills);
+    const rows = data.trim().split('\n').slice(1); // Skip header
+    const parsed = rows.map(row => {
+      const cols = row.split(',');
+      return { name: cols[0], kills: cols[1] };
+    });
 
-  const tbody = document.querySelector('#leaderboard tbody');
-  tbody.innerHTML = ''; // Clear existing
+    parsed.sort((a, b) => b.kills - a.kills);
 
-  parsed.forEach((player, index) => {
-    const tr = document.createElement('tr');
-    tr.classList.add('fade-in');
-    tr.innerHTML = `<td>${index+1}</td><td>${player.name}</td><td>${player.kills}</td>`;
-    tbody.appendChild(tr);
-  });
+    const tbody = document.querySelector('#leaderboard tbody');
+    tbody.innerHTML = ''; // Clear existing
+
+    parsed.forEach((player, index) => {
+      const tr = document.createElement('tr');
+      tr.classList.add('fade-in');
+      tr.innerHTML = `<td>${index+1}</td><td>${player.name}</td><td>${player.kills}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
 }
 
 function switchTab(tab) {
@@ -37,6 +42,7 @@ function switchTab(tab) {
   else if(tab === 'round2') title.textContent = 'Round 2 Leaderboard';
   else title.textContent = 'Final Round Leaderboard';
 
+  lastData = ''; // Reset lastData so it always loads new tab
   fetchLeaderboard(tab);
 }
 

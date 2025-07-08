@@ -9,23 +9,23 @@ body {
 
 .banner img {
   width: 100%;
-  max-height: 200px;
+  max-height: 150px; /* reduce banner height */
   object-fit: cover;
 }
 
 .tabs {
-  margin: 20px 0;
+  margin: 10px 0;
 }
 
 .tabs button {
   background: #e60012;
   color: white;
   border: none;
-  padding: 10px 20px;
-  margin: 0 5px;
-  font-size: 16px;
+  padding: 6px 12px; /* smaller padding */
+  margin: 0 3px;
+  font-size: 14px; /* smaller font */
   cursor: pointer;
-  border-radius: 5px;
+  border-radius: 4px;
 }
 
 .tabs button:hover {
@@ -33,22 +33,24 @@ body {
 }
 
 #leaderboard-container {
-  margin: 20px auto;
-  width: 90%;
+  margin: 10px auto;
+  width: 95%;
   max-width: 600px;
 }
 
 h1 {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+  font-size: 18px; /* smaller title */
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  font-size: 14px; /* smaller table font */
 }
 
 th, td {
-  padding: 12px;
+  padding: 6px; /* smaller cell padding */
   border-bottom: 1px solid #ddd;
 }
 
@@ -57,10 +59,10 @@ tr:nth-child(even) {
 }
 
 tr.fade-in {
-  animation: fadeIn 0.5s ease-in;
+  animation: fadeIn 0.3s ease-in;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(5px); }
   to { opacity: 1; transform: translateY(0); }
 }
