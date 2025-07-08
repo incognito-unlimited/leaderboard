@@ -2,27 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tournament Leaderboard</title>
   <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
 <body>
   <div class="tabs">
-    <button onclick="switchTab('round1')">Round 1</button>
-    <button onclick="switchTab('round2')">Round 2</button>
-    <button onclick="switchTab('final')">Final</button>
+    <button id="round1-tab">Round 1</button>
+    <button id="round2-tab">Round 2</button>
+    <button id="final-tab">Final</button>
   </div>
+
+  <h2 id="leaderboard-title">Round 1 Leaderboard</h2>
 
   <div id="leaderboard-container">
-    <h1 id="leaderboard-title">Round 1 Leaderboard</h1>
-    <table id="leaderboard">
-      <thead>
-        <tr><th>Rank</th><th>Name</th><th>Kills</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <!-- Round 1: Two tables -->
+    <div id="round1-tables" class="two-tables">
+      <table id="leaderboard1"><tbody></tbody></table>
+      <table id="leaderboard2"><tbody></tbody></table>
+    </div>
+
+    <!-- Other rounds: Single table -->
+    <table id="leaderboard" style="display: none;"><tbody></tbody></table>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

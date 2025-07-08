@@ -7,56 +7,101 @@ const urls = {
 let currentTab = 'round1';
 let lastData = [];
 
-async function fetchLeaderboard(tab) {
-  const res = await fetch(urls[tab] + `&timestamp=${Date.now()}`, { cache: "no-store" }); // prevent caching
+async function fetchLeaderboard() {
+  const url = urls[currentTab];
+  const res = await fetch(url + `&timestamp=${Date.now()}`, { cache: "no-store" });
   const data = await res.text();
 
-  const rows = data.trim().split('\n').slice(1); // skip header
+  const rows = data.trim().split('\n').slice(1);
   const parsed = rows.map(row => {
     const cols = row.split(',');
     return { name: cols[0].trim(), kills: parseInt(cols[1].trim()) };
-  });
+  }).sort((a, b) => b.kills - a.kills);
 
-  parsed.sort((a, b) => b.kills - a.kills);
-
-  // Compare with lastData
   const isDifferent = parsed.length !== lastData.length ||
     parsed.some((p, i) => !lastData[i] || p.name !== lastData[i].name || p.kills !== lastData[i].kills);
 
-  if (!isDifferent) return; // No change → do nothing
+  if (!isDifferent) return;
 
-  const tbody = document.querySelector('#leaderboard tbody');
-
-  // Animate existing rows before update
-  parsed.forEach((player, index) => {
-    const prevIndex = lastData.findIndex(p => p.name === player.name);
-    const existingRow = tbody.children[index];
-
-    if (existingRow) {
-      // Update text if kills changed
-      existingRow.cells[2].textContent = player.kills;
-
-      // Animate rank change
-      if (prevIndex > index) {
-        gsap.fromTo(existingRow, { backgroundColor: "#d4edda" }, { backgroundColor: "transparent", duration: 1 });
-      } else if (prevIndex < index && prevIndex !== -1) {
-        gsap.fromTo(existingRow, { backgroundColor: "#f8d7da" }, { backgroundColor: "transparent", duration: 1 });
-      }
-    } else {
-      // Add new row
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${index+1}</td><td>${player.name}</td><td>${player.kills}</td>`;
-      tbody.appendChild(tr);
-      gsap.from(tr, { opacity: 0, y: 10, duration: 0.5 });
-    }
-  });
-
-  // Remove extra rows if data shrank
-  while (tbody.children.length > parsed.length) {
-    tbody.removeChild(tbody.lastChild);
+  if (currentTab === 'round1') {
+    updateTwoTables(parsed);
+  } else {
+    updateSingleTable(parsed);
   }
 
   lastData = parsed;
+}
+
+function updateSingleTable(parsed) {
+  const tbody = document.querySelector('#leaderboard tbody');
+
+  parsed.forEach((player, index) => {
+    let row = tbody.children[index];
+    if (!row) {
+      row = document.createElement('tr');
+      row.innerHTML = `<td>${index+1}</td><td>${player.name}</td><td>${player.kills}</td>`;
+      tbody.appendChild(row);
+      gsap.from(row, { opacity: 0, y: 10, duration: 0.5 });
+    } else {
+      const prevKills = parseInt(row.cells[2].textContent);
+      row.cells[0].textContent = index+1;
+      row.cells[1].textContent = player.name;
+
+      if (prevKills !== player.kills) {
+        row.cells[2].textContent = player.kills;
+        if (player.kills > prevKills) {
+          gsap.fromTo(row, { backgroundColor: "#28a745" }, { backgroundColor: "transparent", duration: 1 });
+        } else {
+          gsap.fromTo(row, { backgroundColor: "#dc3545" }, { backgroundColor: "transparent", duration: 1 });
+        }
+      }
+    }
+  });
+
+  while (tbody.children.length > parsed.length) {
+    tbody.removeChild(tbody.lastChild);
+  }
+}
+
+function updateTwoTables(parsed) {
+  const table1 = document.querySelector('#leaderboard1 tbody');
+  const table2 = document.querySelector('#leaderboard2 tbody');
+
+  const splitIndex = 25;
+  const firstHalf = parsed.slice(0, splitIndex);
+  const secondHalf = parsed.slice(splitIndex, 50);
+
+  updateHalfTable(table1, firstHalf, 1);
+  updateHalfTable(table2, secondHalf, splitIndex + 1);
+}
+
+function updateHalfTable(tbody, data, startRank) {
+  data.forEach((player, i) => {
+    let row = tbody.children[i];
+    if (!row) {
+      row = document.createElement('tr');
+      row.innerHTML = `<td>${startRank + i}</td><td>${player.name}</td><td>${player.kills}</td>`;
+      tbody.appendChild(row);
+      gsap.from(row, { opacity: 0, y: 10, duration: 0.5 });
+    } else {
+      const prevKills = parseInt(row.cells[2].textContent);
+      row.cells[0].textContent = startRank + i;
+      row.cells[1].textContent = player.name;
+
+      if (prevKills !== player.kills) {
+        row.cells[2].textContent = player.kills;
+        if (player.kills > prevKills) {
+          gsap.fromTo(row, { backgroundColor: "#28a745" }, { backgroundColor: "transparent", duration: 1 });
+        } else {
+          gsap.fromTo(row, { backgroundColor: "#dc3545" }, { backgroundColor: "transparent", duration: 1 });
+        }
+      }
+    }
+  });
+
+  while (tbody.children.length > data.length) {
+    tbody.removeChild(tbody.lastChild);
+  }
 }
 
 function switchTab(tab) {
@@ -65,10 +110,21 @@ function switchTab(tab) {
     tab === 'round1' ? 'Round 1 Leaderboard' :
     tab === 'round2' ? 'Round 2 Leaderboard' : 'Final Round Leaderboard';
 
+  document.getElementById('round1-tables').style.display = tab === 'round1' ? 'flex' : 'none';
+  document.getElementById('leaderboard').style.display = tab === 'round1' ? 'none' : '';
+
   lastData = [];
-  fetchLeaderboard(tab);
+  clearAllTables();
+  fetchLeaderboard();
 }
 
-// Initial load
-fetchLeaderboard(currentTab);
-setInterval(() => fetchLeaderboard(currentTab), 5000);
+function clearAllTables() {
+  document.querySelectorAll('tbody').forEach(tbody => tbody.innerHTML = '');
+}
+
+document.getElementById('round1-tab').addEventListener('click', () => switchTab('round1'));
+document.getElementById('round2-tab').addEventListener('click', () => switchTab('round2'));
+document.getElementById('final-tab').addEventListener('click', () => switchTab('final'));
+
+fetchLeaderboard();
+setInterval(fetchLeaderboard, 5000);
