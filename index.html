@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Tournament Leaderboard</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="banner">
+    <img src="banner.jpeg" alt="Tournament Banner" />
+  </div>
+
+  <div class="tabs">
+    <button onclick="switchTab('round1')">Round 1</button>
+    <button onclick="switchTab('round2')">Round 2</button>
+    <button onclick="switchTab('final')">Final</button>
+  </div>
+
+  <div id="leaderboard-container">
+    <h1 id="leaderboard-title">Round 1 Leaderboard</h1>
+    <table id="leaderboard">
+      <thead>
+        <tr><th>Rank</th><th>Name</th><th>Kills</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
