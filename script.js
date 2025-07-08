@@ -5,13 +5,13 @@ const urls = {
 };
 
 let currentTab = 'round1';
-let lastRanks = [];
+let lastData = [];
 
 async function fetchLeaderboard(tab) {
-  const res = await fetch(urls[tab]);
+  const res = await fetch(urls[tab] + `&timestamp=${Date.now()}`, { cache: "no-store" }); // prevent caching
   const data = await res.text();
 
-  const rows = data.trim().split('\n').slice(1); // Skip header
+  const rows = data.trim().split('\n').slice(1); // skip header
   const parsed = rows.map(row => {
     const cols = row.split(',');
     return { name: cols[0].trim(), kills: parseInt(cols[1].trim()) };
@@ -19,41 +19,53 @@ async function fetchLeaderboard(tab) {
 
   parsed.sort((a, b) => b.kills - a.kills);
 
-  const newRanks = parsed.map(p => p.name);
+  // Compare with lastData
+  const isDifferent = parsed.length !== lastData.length ||
+    parsed.some((p, i) => !lastData[i] || p.name !== lastData[i].name || p.kills !== lastData[i].kills);
+
+  if (!isDifferent) return; // No change → do nothing
+
   const tbody = document.querySelector('#leaderboard tbody');
-  tbody.innerHTML = ''; // Clear existing
 
+  // Animate existing rows before update
   parsed.forEach((player, index) => {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `<td>${index+1}</td><td>${player.name}</td><td>${player.kills}</td>`;
-    tbody.appendChild(tr);
+    const prevIndex = lastData.findIndex(p => p.name === player.name);
+    const existingRow = tbody.children[index];
 
-    // Animate rank changes with GSAP
-    const prevIndex = lastRanks.indexOf(player.name);
-    if (prevIndex !== -1) {
+    if (existingRow) {
+      // Update text if kills changed
+      existingRow.cells[2].textContent = player.kills;
+
+      // Animate rank change
       if (prevIndex > index) {
-        // moved up
-        gsap.from(tr, { backgroundColor: "#d4edda", duration: 1 });
-      } else if (prevIndex < index) {
-        // moved down
-        gsap.from(tr, { backgroundColor: "#f8d7da", duration: 1 });
+        gsap.fromTo(existingRow, { backgroundColor: "#d4edda" }, { backgroundColor: "transparent", duration: 1 });
+      } else if (prevIndex < index && prevIndex !== -1) {
+        gsap.fromTo(existingRow, { backgroundColor: "#f8d7da" }, { backgroundColor: "transparent", duration: 1 });
       }
     } else {
-      // new entry
+      // Add new row
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${index+1}</td><td>${player.name}</td><td>${player.kills}</td>`;
+      tbody.appendChild(tr);
       gsap.from(tr, { opacity: 0, y: 10, duration: 0.5 });
     }
   });
 
-  lastRanks = newRanks;
+  // Remove extra rows if data shrank
+  while (tbody.children.length > parsed.length) {
+    tbody.removeChild(tbody.lastChild);
+  }
+
+  lastData = parsed;
 }
 
 function switchTab(tab) {
   currentTab = tab;
-  document.getElementById('leaderboard-title').textContent = 
+  document.getElementById('leaderboard-title').textContent =
     tab === 'round1' ? 'Round 1 Leaderboard' :
     tab === 'round2' ? 'Round 2 Leaderboard' : 'Final Round Leaderboard';
-  
-  lastRanks = []; // reset ranks to ensure animation
+
+  lastData = [];
   fetchLeaderboard(tab);
 }
 

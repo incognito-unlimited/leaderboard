@@ -61,7 +61,7 @@ th, td {
 }
 
 tr:nth-child(even) {
-  background: rgba(230,0,18,0.1);
+  background: rgba(230,0,18,0.05);
 }
 
 tr.up {
